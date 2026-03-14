@@ -16,54 +16,29 @@ export function ExerciseRecovery() {
   const navigate = useNavigate();
   const [counts, setCounts] = useState(() => Object.fromEntries(EXERCISES.map((e) => [e.id, 0])));
   const [showComplete, setShowComplete] = useState(false);
-  const intervalRef = useRef(null);
-  const activeExRef = useRef(null);
+  const [manualExerciseId, setManualExerciseId] = useState(null);
 
   const exercises = EXERCISES.map((e) => ({ ...e, completed: counts[e.id] }));
   const allDone = exercises.every((e) => e.completed >= e.target);
-
-  // Simulate auto-incrementing for demo (in production, replaced by pose detection events)
-  const startSimulation = () => {
-    if (intervalRef.current) return;
-    const pending = exercises.filter((e) => e.completed < e.target);
-    if (!pending.length) return;
-    activeExRef.current = pending[0].id;
-    intervalRef.current = setInterval(() => {
-      setCounts((prev) => {
-        const id = activeExRef.current;
-        const ex = exercises.find((e) => e.id === id);
-        if (!ex) return prev;
-        const next = prev[id] + 1;
-        if (next >= ex.target) {
-          const nextEx = exercises.find((e) => e.id !== id && prev[e.id] < e.target - 1);
-          if (nextEx) activeExRef.current = nextEx.id;
-        }
-        return { ...prev, [id]: Math.min(next, ex.target) };
-      });
-    }, 600);
-  };
-
-  const stopSimulation = () => {
-    clearInterval(intervalRef.current);
-    intervalRef.current = null;
-  };
+  
+  // Logic: Use manual selection if it exists, otherwise find the first incomplete one
+  const currentPending = manualExerciseId 
+    ? exercises.find(e => e.id === manualExerciseId)
+    : exercises.find((e) => e.completed < e.target);
 
   const reset = () => {
-    stopSimulation();
     setCounts(Object.fromEntries(EXERCISES.map((e) => [e.id, 0])));
     setShowComplete(false);
+    setManualExerciseId(null);
   };
 
   useEffect(() => {
     if (allDone && !showComplete) {
-      stopSimulation();
       setShowComplete(true);
       const t = setTimeout(() => navigate(-1), 4000);
       return () => clearTimeout(t);
     }
   }, [allDone]);
-
-  useEffect(() => () => stopSimulation(), []);
 
   return (
     <div className="h-full w-full max-w-7xl mx-auto flex flex-col gap-5">
@@ -85,17 +60,20 @@ export function ExerciseRecovery() {
           transition={{ delay: 0.1 }}
           className="flex-1 flex flex-col gap-4 min-h-[380px]"
         >
-          <ExerciseCamera />
+          <ExerciseCamera 
+            currentExercise={currentPending?.name}
+            onRepIncrement={() => {
+              if (currentPending) {
+                setCounts(prev => ({ ...prev, [currentPending.id]: prev[currentPending.id] + 1 }));
+              }
+            }} 
+          />
 
-          {/* Simulation controls (demo) */}
+          {/* Manual / Reset controls */}
           <div className="flex gap-3 justify-center">
-            <button onClick={startSimulation}
-              className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold transition-all shadow-[0_0_20px_rgba(59,130,246,0.3)]">
-              ▶ Simulate Detection
-            </button>
             <button onClick={reset}
               className="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 text-sm font-semibold transition-all flex items-center gap-2">
-              <RotateCcw className="w-4 h-4" /> Reset
+              <RotateCcw className="w-4 h-4" /> Reset Progress
             </button>
           </div>
         </motion.div>
@@ -112,8 +90,19 @@ export function ExerciseRecovery() {
             <h2 className="text-base font-bold text-white">Recovery Exercises</h2>
           </div>
 
+          <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2 bg-white/5 p-2 rounded-lg border border-white/5">
+            Tip: Click a card below to focus on that specific exercise
+          </p>
+
           {exercises.map((ex, i) => (
-            <motion.div key={ex.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 + 0.2 }}>
+            <motion.div 
+              key={ex.id} 
+              initial={{ opacity: 0, y: 16 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              transition={{ delay: i * 0.1 + 0.2 }}
+              onClick={() => setManualExerciseId(ex.id)}
+              className={`cursor-pointer transition-all ${currentPending?.id === ex.id ? 'ring-2 ring-blue-500 ring-offset-4 ring-offset-[#07090E] rounded-2xl scale-[1.02]' : 'opacity-70 hover:opacity-100'}`}
+            >
               <ExerciseCounterCard {...ex} />
             </motion.div>
           ))}

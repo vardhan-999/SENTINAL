@@ -2,29 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Youtube, Play, X } from "lucide-react";
 
-// Mock results keyed to topic keywords
-const MOCK_RESULTS = {
-  default: [
-    { id: "dQw4w9WgXcQ", title: "Understanding TCP Congestion Control", channel: "CS Fundamentals", thumb: "https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg" },
-    { id: "LKCVKw9CzOo", title: "TCP vs UDP Explained", channel: "NetworkChuck", thumb: "https://img.youtube.com/vi/LKCVKw9CzOo/mqdefault.jpg" },
-  ],
-  "operating systems": [
-    { id: "26QPDBe-NB8", title: "Operating Systems: Process Scheduling", channel: "MIT OpenCourseWare", thumb: "https://img.youtube.com/vi/26QPDBe-NB8/mqdefault.jpg" },
-    { id: "UT0hM4K5TiI", title: "Deadlock Detection & Prevention", channel: "Neso Academy", thumb: "https://img.youtube.com/vi/UT0hM4K5TiI/mqdefault.jpg" },
-  ],
-  "database": [
-    { id: "ztHopE5Wnpc", title: "Database Normalization Explained", channel: "Caleb Curry", thumb: "https://img.youtube.com/vi/ztHopE5Wnpc/mqdefault.jpg" },
-    { id: "kBdlM6hNDAE", title: "B+ Trees in Database Indexing", channel: "CS Dojo", thumb: "https://img.youtube.com/vi/kBdlM6hNDAE/mqdefault.jpg" },
-  ],
-};
-
-function getResults(query) {
-  const q = query.toLowerCase();
-  for (const key of Object.keys(MOCK_RESULTS)) {
-    if (key !== "default" && q.includes(key)) return MOCK_RESULTS[key];
-  }
-  return MOCK_RESULTS.default;
-}
+// No mock results needed, fetching from backend
 
 export function YouTubeConceptSearch() {
   const [query, setQuery] = useState("");
@@ -33,15 +11,26 @@ export function YouTubeConceptSearch() {
   const [playingId, setPlayingId] = useState(null);
   const [searched, setSearched] = useState(false);
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (!query.trim()) return;
     setLoading(true);
     setPlayingId(null);
-    setTimeout(() => {
-      setResults(getResults(query));
+    setSearched(true);
+    
+    try {
+      const resp = await fetch(`/api/youtube?q=${encodeURIComponent(query)}`);
+      const data = await resp.json();
+      if (Array.isArray(data)) {
+        setResults(data);
+      } else {
+        setResults([]);
+      }
+    } catch (e) {
+      console.error("Video Search Failed", e);
+      setResults([]);
+    } finally {
       setLoading(false);
-      setSearched(true);
-    }, 800);
+    }
   };
 
   return (

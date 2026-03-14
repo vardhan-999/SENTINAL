@@ -11,6 +11,10 @@ node_modules
 dist
 dist-ssr
 *.local
+.env
+.env.*
+backend/.env
+backend/sentinel.db
 
 # Editor directories and files
 .vscode/*

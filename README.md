@@ -1,16 +1,38 @@
-# React + Vite
+# 🛡️ Sentinel | AI Smart Revision Assistant
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Sentinel is a premium, AI-powered revision platform designed to help students maximize focus and efficiency. It features real-time focus monitoring via computer vision, AI-driven notes summarization, and an intelligent study chatbot.
 
-Currently, two official plugins are available:
+## ✨ Key Features
+- **AI Study Assistant**: Powered by Gemini 1.5 Flash for deep academic insights.
+- **Focus Monitoring**: Real-time drowsiness and blink detection using MediaPipe.
+- **Notes OCR**: Upload images of handwritten notes to get instant AI summaries.
+- **Smart Task Management**: Integrated syllabus analysis and task tracking.
+- **Educational Video Search**: Directly find relevant YouTube content within the workspace.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🚀 Hosting Instructions
 
-## React Compiler
+### 1. Prerequisites
+- A **Google Gemini API Key** (Free from Google AI Studio).
+- A host that supports Node.js (Render, Railway, Fly.io, etc.).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 2. Environment Variables
+On your hosting platform, set the following environment variable:
+- `GEMINI_API_KEY`: Your actual Google Gemini key.
+- `PORT`: (Usually handled automatically by the host).
 
-## Expanding the ESLint configuration
+### 3. Deployment Steps
+1. **Build Command**: `npm run build`
+2. **Install Command**: `npm install` (The included `postinstall` script will automatically handle the backend).
+3. **Start Command**: `npm start`
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 4. Database Persistence (Crucial)
+This app uses **SQLite**. To ensure your data isn't lost when the server restarts:
+- **Render**: Add a "Disk" and mount it to `/backend`.
+- **Railway**: Add a Volume and mount it to `/backend`.
+
+---
+
+## 🛠️ Tech Stack
+- **Frontend**: React 19, Vite, Tailwind CSS 4, Framer Motion.
+- **Backend**: Node.js, Express, SQLite (better-sqlite3).
+- **AI/Vision**: Google Gemini SDK, MediaPipe, Tesseract.js.

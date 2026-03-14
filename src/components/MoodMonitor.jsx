@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Brain, BatteryFull, Minus, Moon, Zap } from "lucide-react";
+import { useFocus } from "../utils/FocusContext";
 
 const MOODS = [
   {
@@ -50,12 +51,12 @@ const MOODS = [
 ];
 
 export function MoodMonitor({ onDurationChange }) {
-  const [activeMood, setActiveMood] = useState(MOODS[0]);
+  const { mood, updateMood } = useFocus();
+  const activeMood = MOODS.find(m => m.id === mood) || MOODS[1];
 
-  const handleMoodSelect = (mood) => {
-    setActiveMood(mood);
-    onDurationChange?.(mood.duration);
-  };
+  useEffect(() => {
+    onDurationChange?.(activeMood.duration);
+  }, [mood, activeMood.duration, onDurationChange]);
 
   return (
     <div className="glass-card rounded-3xl p-5 border border-white/5 bg-white/[0.02] flex flex-col gap-4">
@@ -66,17 +67,17 @@ export function MoodMonitor({ onDurationChange }) {
 
       {/* Mood Grid */}
       <div className="grid grid-cols-2 gap-2">
-        {MOODS.map((mood) => {
-          const isActive = activeMood.id === mood.id;
+        {MOODS.map((m) => {
+          const isActive = mood === m.id;
           return (
             <motion.button
-              key={mood.id}
+              key={m.id}
               whileTap={{ scale: 0.96 }}
-              onClick={() => handleMoodSelect(mood)}
-              className={`flex items-center gap-2.5 p-3 rounded-xl border transition-all text-left ${isActive ? `${mood.bg} ${mood.border} ${mood.glow}` : "border-white/5 bg-white/[0.01] hover:bg-white/5"}`}
+              onClick={() => updateMood(m.id)}
+              className={`flex items-center gap-2.5 p-3 rounded-xl border transition-all text-left ${isActive ? `${m.bg} ${m.border} ${m.glow}` : "border-white/5 bg-white/[0.01] hover:bg-white/5"}`}
             >
-              <mood.icon className={`w-4 h-4 flex-shrink-0 ${isActive ? mood.color : "text-gray-500"}`} />
-              <span className={`text-xs font-semibold ${isActive ? mood.color : "text-gray-400"}`}>{mood.label}</span>
+              <m.icon className={`w-4 h-4 flex-shrink-0 ${isActive ? m.color : "text-gray-500"}`} />
+              <span className={`text-xs font-semibold ${isActive ? m.color : "text-gray-400"}`}>{m.label}</span>
             </motion.button>
           );
         })}
@@ -92,7 +93,10 @@ export function MoodMonitor({ onDurationChange }) {
           transition={{ duration: 0.25 }}
           className={`rounded-xl p-3.5 ${activeMood.bg} border ${activeMood.border}`}
         >
-          <p className={`text-xs font-semibold ${activeMood.color} mb-1`}>AI Suggestion</p>
+          <div className="flex items-center justify-between mb-1">
+            <p className={`text-xs font-semibold ${activeMood.color}`}>AI Suggestion</p>
+            <span className="text-[10px] text-indigo-400 bg-indigo-500/10 px-1.5 py-0.5 rounded border border-indigo-500/20">Live Detection</span>
+          </div>
           <p className="text-xs text-gray-300 leading-relaxed">{activeMood.suggestion}</p>
           <p className="text-[11px] text-gray-500 mt-1.5">Recommended timer: <span className={`font-bold ${activeMood.color}`}>{activeMood.duration} min</span></p>
         </motion.div>

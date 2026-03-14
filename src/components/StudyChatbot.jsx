@@ -1,26 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bot, Send, User, Loader2 } from "lucide-react";
-
-const TOPIC_RESPONSES = {
-  deadlock: "A **deadlock** occurs when processes are stuck waiting for each other's resources. The four necessary conditions are: Mutual Exclusion, Hold & Wait, No Preemption, and Circular Wait. Prevention involves negating one of these.\n\n*Example:* Process A holds Resource 1 and waits for Resource 2, while Process B holds Resource 2 and waits for Resource 1.",
-  scheduling: "**Process Scheduling** decides which process runs on the CPU. Common algorithms:\n- **FCFS** – First Come First Serve (simple, but convoy effect)\n- **SJF** – Shortest Job First (optimal avg wait time)\n- **Round Robin** – Each process gets a fixed time quantum\n- **Priority** – Higher priority processes run first",
-  "round robin": "**Round Robin Scheduling** assigns a fixed time quantum (e.g., 4ms) to each process in cyclic order. It's preemptive and fair.\n\n*Advantage:* Good response time for interactive systems.\n*Disadvantage:* High context-switch overhead if quantum is too small.",
-  "b+ tree": "A **B+ Tree** is a balanced tree where all data lives in leaf nodes, which are linked together for efficient range queries. Internal nodes only store keys for navigation.\n\n*Search:* O(log n) · *Range query:* O(log n + k) where k is results",
-  normalization: "**Database Normalization** reduces redundancy. Key normal forms:\n- **1NF** – Atomic columns\n- **2NF** – Remove partial dependencies\n- **3NF** – Remove transitive dependencies\n- **BCNF** – Every determinant is a candidate key",
-  default: "That's a great question! Based on your current topic, I'd suggest breaking it down into smaller concepts, mapping each to an example, and testing yourself with a quick quiz. Would you like me to elaborate on any specific subtopic?",
-};
-
-function getResponse(query) {
-  const q = query.toLowerCase();
-  for (const [key, answer] of Object.entries(TOPIC_RESPONSES)) {
-    if (key !== "default" && q.includes(key)) return answer;
-  }
-  return TOPIC_RESPONSES.default;
-}
+import { Bot, Send, User, Loader2, ImagePlus, ScanText } from "lucide-react";
+import Tesseract from "tesseract.js";
 
 function formatMessage(text) {
-  // Very basic markdown-like rendering
+  if (!text) return null;
   return text
     .split("\n")
     .map((line, i) => {
@@ -34,18 +18,54 @@ export function StudyChatbot({ topic = "Operating Systems" }) {
     {
       id: 1,
       role: "assistant",
-      text: `Hi! I'm your AI Study Assistant for **${topic}**. Ask me anything about this topic — definitions, examples, or quiz questions!`,
+      text: `Hi! I'm your AI Study Assistant for **${topic}**. Ask me anything about this topic — or upload an image of your notes so I can help you summarize them!`,
     },
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [ocrLoading, setOcrLoading] = useState(false);
   const bottomRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const sendMessage = () => {
+  const handleFileUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setOcrLoading(true);
+    setMessages((m) => [...m, { id: Date.now(), role: "user", text: "📷 *Sent an image for OCR...*" }]);
+
+    try {
+      // 1. Local OCR with Tesseract
+      const result = await Tesseract.recognize(file, "eng");
+      const extractedText = result.data.text.trim();
+      
+      if (!extractedText) throw new Error("No text found");
+
+      // 2. Send to Backend for AI Summarization
+      const response = await fetch(`/api/summarize`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: extractedText }),
+      });
+      const data = await response.json();
+
+      setMessages((m) => [...m, { 
+        id: Date.now() + 1, 
+        role: "assistant", 
+        text: data.summary || extractedText 
+      }]);
+    } catch (err) {
+      setMessages((m) => [...m, { id: Date.now() + 2, role: "assistant", text: "Sorry, I couldn't summarize that image." }]);
+    } finally {
+      setOcrLoading(false);
+    }
+  };
+
+  const sendMessage = async () => {
     const trimmed = input.trim();
     if (!trimmed || loading) return;
 
@@ -54,26 +74,43 @@ export function StudyChatbot({ topic = "Operating Systems" }) {
     setInput("");
     setLoading(true);
 
-    setTimeout(() => {
-      const reply = getResponse(trimmed);
-      setMessages((m) => [...m, { id: Date.now() + 1, role: "assistant", text: reply }]);
+    try {
+      const response = await fetch(`/api/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          message: trimmed,
+          topic: topic,
+          history: messages.map(m => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.text }] }))
+        }),
+      });
+      const data = await response.json();
+      if (data.error) throw new Error(data.error);
+
+      setMessages((m) => [...m, { id: Date.now() + 1, role: "assistant", text: data.text || "I found no results." }]);
+    } catch (err) {
+      console.error("Chat Error:", err);
+      setMessages((m) => [...m, { id: Date.now() + 1, role: "assistant", text: "Connection to Sentinel Brain failed. Please check if the backend server is running!" }]);
+    } finally {
       setLoading(false);
-    }, 900 + Math.random() * 600);
+    }
   };
 
   return (
-    <div className="glass-card rounded-3xl border border-white/5 bg-white/[0.02] flex flex-col h-full overflow-hidden">
+    <div className="glass-card rounded-3xl border border-white/5 bg-white/[0.02] flex flex-col h-full overflow-hidden relative">
       {/* Header */}
-      <div className="flex items-center gap-3 px-5 py-4 border-b border-white/5 flex-shrink-0">
-        <div className="w-8 h-8 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center">
-          <Bot className="w-4 h-4 text-indigo-400" />
-        </div>
-        <div>
-          <h2 className="text-sm font-bold text-white">AI Study Assistant</h2>
-          <p className="text-[11px] text-emerald-400 flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse" />
-            Active
-          </p>
+      <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 flex-shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center">
+            <Bot className="w-4 h-4 text-indigo-400" />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold text-white">AI Study Assistant</h2>
+            <p className="text-[11px] text-emerald-400 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse" />
+              Active
+            </p>
+          </div>
         </div>
       </div>
 
@@ -111,13 +148,14 @@ export function StudyChatbot({ topic = "Operating Systems" }) {
           ))}
         </AnimatePresence>
 
-        {loading && (
+        {(loading || ocrLoading) && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-2.5">
             <div className="w-7 h-7 rounded-lg bg-indigo-500/20 border border-indigo-500/20 flex items-center justify-center flex-shrink-0">
               <Bot className="w-3.5 h-3.5 text-indigo-400" />
             </div>
-            <div className="bg-white/5 border border-white/5 rounded-2xl rounded-tl-sm px-4 py-3">
+            <div className="bg-white/5 border border-white/5 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-2">
               <Loader2 className="w-4 h-4 text-indigo-400 animate-spin" />
+              {ocrLoading && <span className="text-[10px] text-indigo-300 font-medium">Scanning notes...</span>}
             </div>
           </motion.div>
         )}
@@ -125,21 +163,49 @@ export function StudyChatbot({ topic = "Operating Systems" }) {
       </div>
 
       {/* Input */}
-      <div className="px-4 py-3 border-t border-white/5 flex gap-2 flex-shrink-0">
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
-          placeholder="Ask about this topic..."
-          className="flex-1 h-10 px-4 rounded-xl bg-white/5 border border-white/10 text-white text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/40"
-        />
-        <button
-          onClick={sendMessage}
-          disabled={!input.trim() || loading}
-          className="w-10 h-10 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition-colors flex-shrink-0"
-        >
-          <Send className="w-4 h-4 text-white" />
-        </button>
+      <div className="px-4 py-3 border-t border-white/5 flex flex-col gap-2 flex-shrink-0">
+        <div className="flex gap-2">
+          <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            accept="image/*"
+            onChange={handleFileUpload}
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center transition-colors flex-shrink-0 group"
+            title="Upload notes for OCR"
+          >
+            <ImagePlus className="w-4 h-4 text-gray-400 group-hover:text-white" />
+          </button>
+
+          <button
+            onClick={() => {
+              setInput("Tell me a story to help me remember " + topic);
+              sendMessage();
+            }}
+            className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 flex items-center justify-center transition-colors flex-shrink-0 group"
+            title="Generate Story Maker for this topic"
+          >
+            <ScanText className="w-4 h-4 text-indigo-400 group-hover:text-indigo-300" />
+          </button>
+          
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
+            placeholder="Ask about this topic..."
+            className="flex-1 h-10 px-4 rounded-xl bg-white/5 border border-white/10 text-white text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/40"
+          />
+          <button
+            onClick={sendMessage}
+            disabled={!input.trim() || loading || ocrLoading}
+            className="w-10 h-10 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition-colors flex-shrink-0"
+          >
+            <Send className="w-4 h-4 text-white" />
+          </button>
+        </div>
       </div>
     </div>
   );

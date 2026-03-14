@@ -161,6 +161,24 @@
   }
 }
 
+/* Glassmorphism & Custom Sentinel Styles */
+.glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(300%); }
+}
+
+.animate-scanline {
+  animation: scanline 3s linear infinite;
+}
+
+/* Base Ticks and Layout styles preserved */
 .ticks {
   position: relative;
   width: 100%;
@@ -170,7 +188,7 @@
     content: '';
     position: absolute;
     top: -4.5px;
-    border: 5px solid transparent;
+    border: 4px solid transparent;
   }
 
   &::before {

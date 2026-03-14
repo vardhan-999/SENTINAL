@@ -13,11 +13,13 @@ import { SessionInsights } from "./pages/SessionInsights";
 import { AnalyticsDashboard } from "./pages/AnalyticsDashboard";
 import { AIAssistantPage } from "./pages/AIAssistantPage";
 import { VideoSearchPage } from "./pages/VideoSearchPage";
+import { FocusProvider } from "./utils/FocusContext";
 
 function App() {
   return (
-    <Router>
-      <Routes>
+    <FocusProvider>
+      <Router>
+        <Routes>
         <Route path="/" element={<LoginPage />} />
 
         {/* Dashboard layout — Camera Monitor + Profile Menu, no FocusBar */}
@@ -39,8 +41,9 @@ function App() {
           <Route path="/ai-assistant" element={<AIAssistantPage />} />
           <Route path="/video-search" element={<VideoSearchPage />} />
         </Route>
-      </Routes>
-    </Router>
+        </Routes>
+      </Router>
+    </FocusProvider>
   );
 }
 
