@@ -1,0 +1,20 @@
+﻿git : remote: Permission to 
+charan255/sentinel.git denied 
+to bharath-dev7.
+At line:1 char:1
++ git push origin main 2>&1 | 
+Out-File -FilePath 
+git_push_error.txt -En ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : 
+    NotSpecified: (remote: P  
+  ermiss...o bharath-dev7.:   
+ String) [], RemoteExcepti    
+on
+    + FullyQualifiedErrorId : 
+    NativeCommandError
+ 
+fatal: unable to access 'https
+://github.com/charan255/sentin
+el.git/': The requested URL 
+returned error: 403

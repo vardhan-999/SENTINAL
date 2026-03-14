@@ -27,7 +27,7 @@ export function StudyTaskList() {
   const userId = 1;
 
   useEffect(() => {
-    fetch(`/api/tasks/${userId}`)
+    fetch(`${import.meta.env.VITE_BACKEND_URL || ''}/api/tasks/${userId}`)
       .then(res => res.json())
       .then(data => {
         if (data && data.length > 0) {
@@ -49,7 +49,7 @@ export function StudyTaskList() {
     if (!trimmed) return;
 
     try {
-      const resp = await fetch(`/api/tasks`, {
+      const resp = await fetch(`${import.meta.env.VITE_BACKEND_URL || ''}/api/tasks`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: userId, title: trimmed, topic: "Custom" }),

@@ -46,7 +46,7 @@ export function StudyChatbot({ topic = "Operating Systems" }) {
       if (!extractedText) throw new Error("No text found");
 
       // 2. Send to Backend for AI Summarization
-      const response = await fetch(`/api/summarize`, {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || ''}/api/summarize`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: extractedText }),
@@ -75,7 +75,7 @@ export function StudyChatbot({ topic = "Operating Systems" }) {
     setLoading(true);
 
     try {
-      const response = await fetch(`/api/chat`, {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || ''}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 

@@ -18,7 +18,7 @@ export function YouTubeConceptSearch() {
     setSearched(true);
     
     try {
-      const resp = await fetch(`/api/youtube?q=${encodeURIComponent(query)}`);
+      const resp = await fetch(`${import.meta.env.VITE_BACKEND_URL || ''}/api/youtube?q=${encodeURIComponent(query)}`);
       const data = await resp.json();
       if (Array.isArray(data)) {
         setResults(data);

@@ -1,0 +1,21 @@
+﻿On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   src/components/StudyChatbot.jsx
+	modified:   src/components/StudyTaskList.jsx
+	modified:   src/components/YouTubeConceptSearch.jsx
+	modified:   src/utils/FocusContext.jsx
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	.npmrc
+	git_push_error.txt
+	git_push_new_repo.txt
+	git_stat.txt
+	git_status_output.txt
+	stat_out.txt
+
+no changes added to commit (use "git add" and/or "git commit -a")

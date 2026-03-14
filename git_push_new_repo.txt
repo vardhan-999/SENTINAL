@@ -1,0 +1,18 @@
+﻿git : To https://github.com/bh
+arath-dev7/SenTinal.git
+At line:1 char:1
++ git push -u origin main 
+2>&1 | Out-File -FilePath 
+git_push_new_repo.t ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : 
+    NotSpecified: (To https:  
+  //gith...v7/SenTinal.git:   
+ String) [], RemoteExcepti    
+on
+    + FullyQualifiedErrorId : 
+    NativeCommandError
+ 
+ * [new branch]      main -> 
+main
+branch 'main' set up to track 'origin/main'.

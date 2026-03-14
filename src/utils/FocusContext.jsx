@@ -14,7 +14,7 @@ export function FocusProvider({ children }) {
 
   const startSession = useCallback(async (userId = 1) => { // Mock user
     try {
-      const resp = await fetch(`/api/sessions/start`, {
+      const resp = await fetch(`${import.meta.env.VITE_BACKEND_URL || ''}/api/sessions/start`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: userId, mood: mood }),
@@ -31,7 +31,7 @@ export function FocusProvider({ children }) {
   const endSession = useCallback(async () => {
     if (!sessionId) return;
     try {
-      await fetch(`/api/sessions/end`, {
+      await fetch(`${import.meta.env.VITE_BACKEND_URL || ''}/api/sessions/end`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId, focus_score: stats.focusScore }),
