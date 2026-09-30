@@ -30,6 +30,9 @@ This app uses **SQLite**. To ensure your data isn't lost when the server restart
 - **Render**: Add a "Disk" and mount it to `/backend`.
 - **Railway**: Add a Volume and mount it to `/backend`.
 
+## prototype
+prototype :https://sen-tinal-nine.vercel.app/
+
 ---
 
 ## 🛠️ Tech Stack
